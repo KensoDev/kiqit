@@ -29,7 +29,7 @@ If you are using bundler, simply add
 
 
 ## Configuration
-In an initializer, all you need to say is whether you want perform later to be enabled or not, typically, it will be something like this
+In an initializer, all you need to say is whether you want kiqit to be enabled or not, typically, it will be something like this
 
 ```ruby
 unless Rails.env.test?
