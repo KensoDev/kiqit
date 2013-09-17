@@ -1,7 +1,7 @@
 [![Build Status](https://secure.travis-ci.org/KensoDev/kiqit.png)](https://secure.travis-ci.org/KensoDev/kiqit)
 
 ## Overview
-Perform later is a gem meant to work with the [Sidekiq](http://github.com/defunkt/sidekiq) queue system.
+Kiqit is a gem meant to work with the [Sidekiq](http://github.com/mperham/sidekiq) queue system. It was adapted from the Perform Later gem.
 
 Usually, when working with Sidekiq, you need separate "Worker" classes and you also need to do `Sidekiq.enqueue` whenever you want to add a task to the queue.
 
@@ -179,9 +179,10 @@ If you want to contribute (awesome), open a feature branch, base it on master.
 
 Be as descriptive as you can in the pull request description, just to be clear what problem you are solving or what feature are you adding.
 
-## Author
+## Authors
 
 Avi Tzurel ([@kensodev](http://twitter.com/kensodev)) http://www.kensodev.com
+Tom Caspy
 
 ## Contributors
 
