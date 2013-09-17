@@ -4,59 +4,59 @@ module Sidekiq::Plugins::Later::Method
   module ClassMethods
     def later(method_name, opts={})
       alias_method "now_#{method_name}", method_name
-      return unless PerformLater.config.enabled?
+      return unless Kiqit.config.enabled?
 
       define_method "#{method_name}" do |*args|
         loner          = opts.fetch(:loner, false)
         queue          = opts.fetch(:queue, :generic)
         delay          = opts.fetch(:delay, false)
-        klass          = PerformLater::Workers::ActiveRecord::Worker
-        klass          = PerformLater::Workers::ActiveRecord::LoneWorker if loner
-        args           = PerformLater::ArgsParser.args_to_sidekiq(args)
-        digest         = PerformLater::PayloadHelper.get_digest(klass, method_name, args)
+        klass          = Kiqit::Workers::ActiveRecord::Worker
+        klass          = Kiqit::Workers::ActiveRecord::LoneWorker if loner
+        args           = Kiqit::ArgsParser.args_to_sidekiq(args)
+        digest         = Kiqit::PayloadHelper.get_digest(klass, method_name, args)
 
         if loner
           return "AR EXISTS!" if Sidekiq.redis{|i| i.get(digest).present?}
           Sidekiq.redis{|i| i.set(digest, 'EXISTS')}
         end
 
-        job = PerformLater::JobCreator.new(queue, klass, send(:class).name, send(:id), "now_#{method_name}", *args)
+        job = Kiqit::JobCreator.new(queue, klass, send(:class).name, send(:id), "now_#{method_name}", *args)
         job.enqueue(delay)
       end
     end
 
   end
 
-  def perform_later(queue, method, *args)
+  def kiqit(queue, method, *args)
     return perform_now(method, args) if plugin_disabled?
 
-    worker  = PerformLater::Workers::ActiveRecord::Worker
-    job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    worker  = Kiqit::Workers::ActiveRecord::Worker
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
     enqueue_in_sidekiq_or_send(job)
   end
 
-  def perform_later!(queue, method, *args)
+  def kiqit!(queue, method, *args)
     return perform_now(method, args) if plugin_disabled?
     return "AR EXISTS!" if loner_exists(method, args)
     
-    worker  = PerformLater::Workers::ActiveRecord::LoneWorker
-    job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    worker  = Kiqit::Workers::ActiveRecord::LoneWorker
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
     enqueue_in_sidekiq_or_send(job)
   end
 
-  def perform_later_in(delay, queue, method, *args)
+  def kiqit_in(delay, queue, method, *args)
     return perform_now(method, args) if plugin_disabled?
 
-    worker  = PerformLater::Workers::ActiveRecord::Worker
-    job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    worker  = Kiqit::Workers::ActiveRecord::Worker
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
     enqueue_in_sidekiq_or_send(job, delay)
   end
   
-  def perform_later_in!(delay, queue, method, *args)
+  def kiqit_in!(delay, queue, method, *args)
     return  perform_now(method, args) if plugin_disabled?
 
-    worker  = PerformLater::Workers::ActiveRecord::LoneWorker
-    job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    worker  = Kiqit::Workers::ActiveRecord::LoneWorker
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
     enqueue_in_sidekiq_or_send(job, delay)
   end
 
@@ -64,8 +64,8 @@ module Sidekiq::Plugins::Later::Method
 
   private 
     def loner_exists(method, args)
-      args = PerformLater::ArgsParser.args_to_sidekiq(args)
-      digest = PerformLater::PayloadHelper.get_digest(self.class.name, method, args)
+      args = Kiqit::ArgsParser.args_to_sidekiq(args)
+      digest = Kiqit::PayloadHelper.get_digest(self.class.name, method, args)
 
       return true unless Sidekiq.redis{ |i| i.get(digest).blank?}
       Sidekiq.redis{|i| i.set(digest, 'EXISTS')}
@@ -74,12 +74,12 @@ module Sidekiq::Plugins::Later::Method
     end
 
     def enqueue_in_sidekiq_or_send(job, delay=nil)
-      job.args = PerformLater::ArgsParser.args_to_sidekiq(job.args)
+      job.args = Kiqit::ArgsParser.args_to_sidekiq(job.args)
       job.enqueue(delay)
     end
         
     def plugin_disabled?
-      !PerformLater.config.enabled?
+      !Kiqit.config.enabled?
     end
 
     def perform_now(method, args)

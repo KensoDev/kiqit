@@ -1,4 +1,4 @@
-module PerformLater
+module Kiqit
   class Config
     def self.enabled=(value)
       @enabled = value

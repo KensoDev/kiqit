@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 describe Sidekiq::Plugins::Later::Method do
-  before(:each) { PerformLater.config.enabled = true }
+  before(:each) { Kiqit.config.enabled = true }
   before(:each) { Sidekiq.redis = $redis }
   
   context "enabled" do
     before(:each) do 
-      PerformLater.config.stub(:enabled?).and_return(true)
+      Kiqit.config.stub(:enabled?).and_return(true)
       User.later :long_running_method
     end
 
@@ -19,7 +19,7 @@ describe Sidekiq::Plugins::Later::Method do
 
   context "loner" do
     before(:each) do 
-      PerformLater.config.stub(:enabled?).and_return(true)
+      Kiqit.config.stub(:enabled?).and_return(true)
       User.later :lonely_long_running_method, loner: true
     end
 
@@ -33,13 +33,13 @@ describe Sidekiq::Plugins::Later::Method do
       Sidekiq::Queue.new(:generic).size.should == 1
     end
 
-    it "should only add a single method to the queue, since the config is with a loner when using perform_later! method" do
+    it "should only add a single method to the queue, since the config is with a loner when using kiqit! method" do
       user = User.create
-      user.perform_later!(:generic, :lonely_long_running_method)
-      user.perform_later!(:generic, :lonely_long_running_method)
-      user.perform_later!(:generic, :lonely_long_running_method)
-      user.perform_later!(:generic, :lonely_long_running_method)
-      user.perform_later!(:generic, :lonely_long_running_method)
+      user.kiqit!(:generic, :lonely_long_running_method)
+      user.kiqit!(:generic, :lonely_long_running_method)
+      user.kiqit!(:generic, :lonely_long_running_method)
+      user.kiqit!(:generic, :lonely_long_running_method)
+      user.kiqit!(:generic, :lonely_long_running_method)
       Sidekiq::Queue.new(:generic).size.should == 1
     end
   end
@@ -55,14 +55,14 @@ describe Sidekiq::Plugins::Later::Method do
   context 'arguments to Sidekiq' do
     it 'should send no args to sidekiq' do
       user = User.create
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::ActiveRecord::Worker, "args" => ['User', user.id, :lonely_long_running_method])
-      user.perform_later(:generic, :lonely_long_running_method)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::ActiveRecord::Worker, "args" => ['User', user.id, :lonely_long_running_method])
+      user.kiqit(:generic, :lonely_long_running_method)
     end
 
     it 'should send 1 arg to sidekiq' do
       user = User.create
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::ActiveRecord::LoneWorker, "args" => ['User', user.id, :lonely_long_running_method, 1])
-      user.perform_later!(:generic, :lonely_long_running_method, 1)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::ActiveRecord::LoneWorker, "args" => ['User', user.id, :lonely_long_running_method, 1])
+      user.kiqit!(:generic, :lonely_long_running_method, 1)
     end
   end
 
@@ -72,19 +72,19 @@ describe Sidekiq::Plugins::Later::Method do
     user.should respond_to(:now_long_running_method)
   end
 
-  describe :perform_later! do
+  describe :kiqit! do
     it "should send the correct params on the method (with hash)" do
-      PerformLater.config.stub(:enabled?).and_return(false)
+      Kiqit.config.stub(:enabled?).and_return(false)
        user = User.create
        user.should_receive(:method_with_hash_as_option).with({:some_option => "Brown fox"})
-       user.perform_later!(:generic, :method_with_hash_as_option, :some_option => "Brown fox")
+       user.kiqit!(:generic, :method_with_hash_as_option, :some_option => "Brown fox")
     end
 
     it "should send the correct params on the method (with integer)" do
-      PerformLater.config.stub(:enabled?).and_return(false)
+      Kiqit.config.stub(:enabled?).and_return(false)
        user = User.create
        user.should_receive(:method_with_integer_option).with(1).and_return(1)
-       user.perform_later!(:generic, :method_with_integer_option, 1)
+       user.kiqit!(:generic, :method_with_integer_option, 1)
     end 
   end
 
@@ -94,7 +94,7 @@ describe Sidekiq::Plugins::Later::Method do
     let(:actual_enqueue) {Time.now + enqueue_in}
 
     before(:each) do
-      PerformLater.config.stub(:enabled?).and_return(true)    
+      Kiqit.config.stub(:enabled?).and_return(true)    
       User.later :delayed_long_running_method, :delay => enqueue_in
     end
 
@@ -108,11 +108,11 @@ describe Sidekiq::Plugins::Later::Method do
       end
     end
 
-    describe :perform_later_in do
+    describe :kiqit_in do
       it "should delay enqueuing for the duration of delay time given" do
         user = User.create
         old_count = Sidekiq.redis{|i| i.zcount("schedule", "-inf", "+inf")}
-        user.perform_later_in(enqueue_in, :generic, :delayed_long_running_method)
+        user.kiqit_in(enqueue_in, :generic, :delayed_long_running_method)
         new_count = Sidekiq.redis{|i| i.zcount("schedule", "-inf", "+inf")}
         new_count.should == old_count + 1
       end

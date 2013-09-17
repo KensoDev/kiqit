@@ -1,4 +1,4 @@
-module PerformLater
+module Kiqit
   class PayloadHelper
     # Public: Get Digest for the loner key.
     #

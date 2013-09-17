@@ -6,18 +6,18 @@ class CustomFinder
   end
 end
 
-describe PerformLater::ArgsParser do
-  subject { PerformLater::ArgsParser }
+describe Kiqit::ArgsParser do
+  subject { Kiqit::ArgsParser }
   let(:user) { User.create }
 
   context "Custom finder" do
     it "should invoke the custom class finder method" do
       CustomFinder.should_receive(:find).with(User, user.id.to_s)
-      PerformLater::Plugins.add_finder(CustomFinder)
+      Kiqit::Plugins.add_finder(CustomFinder)
       
       subject.args_from_sidekiq(["AR:User:#{user.id}"])
 
-      PerformLater::Plugins.clear_finder!
+      Kiqit::Plugins.clear_finder!
     end
   end
 

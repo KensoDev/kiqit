@@ -1,29 +1,29 @@
-module ObjectPerformLater
-  def perform_later(queue, method, *args)
-    return perform_now(method, args) unless PerformLater.config.enabled?
+module ObjectKiqit
+  def kiqit(queue, method, *args)
+    return perform_now(method, args) unless Kiqit.config.enabled?
 
-    worker = PerformLater::Workers::Objects::Worker
-    perform_later_enqueue(worker, queue, method, args)
+    worker = Kiqit::Workers::Objects::Worker
+    kiqit_enqueue(worker, queue, method, args)
   end
 
-  def perform_later!(queue, method, *args)
-    return perform_now(method, args) unless PerformLater.config.enabled?
+  def kiqit!(queue, method, *args)
+    return perform_now(method, args) unless Kiqit.config.enabled?
 
     return "EXISTS!" if loner_exists(method, args)
 
-    worker = PerformLater::Workers::Objects::LoneWorker
-    perform_later_enqueue(worker, queue, method, args)
+    worker = Kiqit::Workers::Objects::LoneWorker
+    kiqit_enqueue(worker, queue, method, args)
   end
 
   private 
     def loner_exists(method, *args)
-      digest = PerformLater::PayloadHelper.get_digest(self.name, method, args)
+      digest = Kiqit::PayloadHelper.get_digest(self.name, method, args)
 
       !Sidekiq.redis{|i| i.setnx(digest, 'EXISTS')}
     end
 
-    def perform_later_enqueue(worker, queue, method, args)
-      args = PerformLater::ArgsParser.args_to_sidekiq(args)
+    def kiqit_enqueue(worker, queue, method, args)
+      args = Kiqit::ArgsParser.args_to_sidekiq(args)
       params = {"queue" => queue, "class" => worker, "args" => [self.name, method, *args]}
       Sidekiq::Client.push(params)
     end
@@ -33,4 +33,4 @@ module ObjectPerformLater
     end
 end
 
-Object.send(:include, ObjectPerformLater)
+Object.send(:include, ObjectKiqit)

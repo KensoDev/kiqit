@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 
-describe PerformLater::PayloadHelper do
-  subject { PerformLater::PayloadHelper }
+describe Kiqit::PayloadHelper do
+  subject { Kiqit::PayloadHelper }
 
   describe :get_digest do
     it "should o something" do
@@ -14,7 +14,7 @@ describe PerformLater::PayloadHelper do
         }.to_s)
       digest = "loner:#{digest}"
 
-      args = PerformLater::ArgsParser.args_to_sidekiq(user)
+      args = Kiqit::ArgsParser.args_to_sidekiq(user)
       subject.get_digest("DummyClass", :some_method, args).should == digest
     end
   end

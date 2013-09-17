@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe PerformLater::JobCreator do
+describe Kiqit::JobCreator do
   
-  let(:job)    {PerformLater::JobCreator.new("some_queue", "WorkerClass", "Klass_name", 2, :the_method)}
+  let(:job)    {Kiqit::JobCreator.new("some_queue", "WorkerClass", "Klass_name", 2, :the_method)}
   let(:delay)  {42}
 
   describe :enqueue do

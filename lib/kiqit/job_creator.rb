@@ -1,4 +1,4 @@
-module PerformLater
+module Kiqit
   class JobCreator
     
     attr_reader :queue, :worker, :klass_name, :id, :method

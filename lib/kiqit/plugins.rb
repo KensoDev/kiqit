@@ -1,4 +1,4 @@
-module PerformLater
+module Kiqit
   class Plugins
     def self.finder_class
       @@finder_class ||= nil

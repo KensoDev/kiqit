@@ -1,4 +1,4 @@
-require 'perform_later/plugins'
+require 'kiqit/plugins'
 
 class BadDummyFinder 
 
@@ -10,8 +10,8 @@ class GoodDummyFinder
   end
 end
 
-describe PerformLater::Plugins do
-  subject { PerformLater::Plugins }
+describe Kiqit::Plugins do
+  subject { Kiqit::Plugins }
 
   describe :finder_class do
     it "should be nil" do

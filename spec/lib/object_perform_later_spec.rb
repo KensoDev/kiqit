@@ -26,32 +26,32 @@ class DummyClass
   end
 end
 
-describe ObjectPerformLater do
+describe ObjectKiqit do
   it "should insert a task into sidekiq when the config is enabled" do
     Sidekiq.redis = $redis
 
-    PerformLater.config.stub(:enabled?).and_return(true)
-    User.perform_later(:generic, :get_metadata)
+    Kiqit.config.stub(:enabled?).and_return(true)
+    User.kiqit(:generic, :get_metadata)
 
     Sidekiq::Queue.new(:generic).size.should == 1
   end
 
   it "should send the method on the class when the config is disabled" do
-    PerformLater.config.stub(:enabled?).and_return(false)
+    Kiqit.config.stub(:enabled?).and_return(false)
     
     User.should_receive(:get_metadata)
-    User.perform_later(:generic, :get_metadata)
+    User.kiqit(:generic, :get_metadata)
 
     Sidekiq::Queue.new(:generic).size.should == 0
   end
 
   it "should only add the method a single time to the queue" do
-    PerformLater.config.stub(:enabled?).and_return(true)
+    Kiqit.config.stub(:enabled?).and_return(true)
     
-    DummyClass.perform_later!(:generic, :do_something_really_heavy)
-    DummyClass.perform_later!(:generic, :do_something_really_heavy)
-    DummyClass.perform_later!(:generic, :do_something_really_heavy)
-    DummyClass.perform_later!(:generic, :do_something_really_heavy)
+    DummyClass.kiqit!(:generic, :do_something_really_heavy)
+    DummyClass.kiqit!(:generic, :do_something_really_heavy)
+    DummyClass.kiqit!(:generic, :do_something_really_heavy)
+    DummyClass.kiqit!(:generic, :do_something_really_heavy)
 
     Sidekiq::Queue.new(:generic).size.should == 1
   end
@@ -60,82 +60,82 @@ describe ObjectPerformLater do
     let(:user) { User.create }
 
     it "should pass no values" do
-      PerformLater.config.stub(:enabled?).and_return(true)
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_array])
-      DummyClass.perform_later(:generic, :do_something_with_array)
+      Kiqit.config.stub(:enabled?).and_return(true)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_array])
+      DummyClass.kiqit(:generic, :do_something_with_array)
     end
 
     it "should pass the correct value (array)" do
-      PerformLater.config.stub(:enabled?).and_return(true)
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_array, [1,2,3,4,5]])
-      DummyClass.perform_later(:generic, :do_something_with_array, [1,2,3,4,5])
+      Kiqit.config.stub(:enabled?).and_return(true)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_array, [1,2,3,4,5]])
+      DummyClass.kiqit(:generic, :do_something_with_array, [1,2,3,4,5])
     end
 
     it "should pass multiple args" do
-      PerformLater.config.stub(:enabled?).and_return(true)
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_multiple_args, 1, 2])
-      DummyClass.perform_later(:generic, :do_something_with_multiple_args, 1, 2)
+      Kiqit.config.stub(:enabled?).and_return(true)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_multiple_args, 1, 2])
+      DummyClass.kiqit(:generic, :do_something_with_multiple_args, 1, 2)
     end
 
     it "should pass AR and hash" do
-      PerformLater.config.stub(:enabled?).and_return(true)
-      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => PerformLater::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_multiple_args, "AR:User:#{user.id}", "---\n:a: 2\n"])
-      DummyClass.perform_later(:generic, :do_something_with_multiple_args, user, {a: 2})
+      Kiqit.config.stub(:enabled?).and_return(true)
+      Sidekiq::Client.should_receive(:push).with("queue" => :generic, "class" => Kiqit::Workers::Objects::Worker, "args" => ["DummyClass", :do_something_with_multiple_args, "AR:User:#{user.id}", "---\n:a: 2\n"])
+      DummyClass.kiqit(:generic, :do_something_with_multiple_args, user, {a: 2})
     end
   end
 
-  describe :perform_later do
+  describe :kiqit do
     before(:each) do
-      PerformLater.config.stub(:enabled?).and_return(false)
+      Kiqit.config.stub(:enabled?).and_return(false)
     end
     
     it "should pass the correct value (String)" do
-      DummyClass.perform_later(:generic, :do_something_with_string, "Avi Tzurel").should == "Avi Tzurel"
+      DummyClass.kiqit(:generic, :do_something_with_string, "Avi Tzurel").should == "Avi Tzurel"
     end
 
     it "should pass the correct value (AR object)" do
       user = User.create
-      DummyClass.perform_later(:generic, :do_something_with_user, user).should == user
+      DummyClass.kiqit(:generic, :do_something_with_user, user).should == user
     end
 
     it "should pass the correct value (optional hash)" do
-      DummyClass.perform_later(:generic, :do_something_with_optional_hash).should == true
+      DummyClass.kiqit(:generic, :do_something_with_optional_hash).should == true
     end
 
     it "should pass multiple args" do
-      DummyClass.perform_later(:generic, :do_something_with_multiple_args, 1, 2).should == "1, 2"
+      DummyClass.kiqit(:generic, :do_something_with_multiple_args, 1, 2).should == "1, 2"
     end
 
     it "should pass AR and hash" do
       u = User.create
-      DummyClass.perform_later(:generic, :do_something_with_multiple_args, u, {a: 2}).should == "#{u}, {:a=>2}"
+      DummyClass.kiqit(:generic, :do_something_with_multiple_args, u, {a: 2}).should == "#{u}, {:a=>2}"
     end
   end
 
-  describe :perform_later! do
+  describe :kiqit! do
     before(:each) do
-      PerformLater.config.stub(:enabled?).and_return(false)
+      Kiqit.config.stub(:enabled?).and_return(false)
     end
     it "should pass the correct value (String)" do
-      DummyClass.perform_later!(:generic, :do_something_with_string, "Avi Tzurel").should == "Avi Tzurel"
+      DummyClass.kiqit!(:generic, :do_something_with_string, "Avi Tzurel").should == "Avi Tzurel"
     end
 
     it "should pass the correct value (AR object)" do
       user = User.create
-      DummyClass.perform_later!(:generic, :do_something_with_user, user).should == user
+      DummyClass.kiqit!(:generic, :do_something_with_user, user).should == user
     end
 
     it "should pass the correct value (optional hash)" do
-      DummyClass.perform_later!(:generic, :do_something_with_optional_hash).should == true
+      DummyClass.kiqit!(:generic, :do_something_with_optional_hash).should == true
     end
 
     it "should pass multiple args" do
-      DummyClass.perform_later!(:generic, :do_something_with_multiple_args, 1, 2).should == "1, 2"
+      DummyClass.kiqit!(:generic, :do_something_with_multiple_args, 1, 2).should == "1, 2"
     end
 
     it "should pass AR and hash" do
       u = User.create
-      DummyClass.perform_later!(:generic, :do_something_with_multiple_args, u, {a: 2}).should == "#{u}, {:a=>2}"
+      DummyClass.kiqit!(:generic, :do_something_with_multiple_args, u, {a: 2}).should == "#{u}, {:a=>2}"
     end
   end
 end

@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "perform_later/version"
+require "kiqit/version"
 
 Gem::Specification.new do |s|
-  s.name        = "perform_later"
-  s.version     = PerformLater::VERSION
-  s.authors     = ["Avi Tzurel"]
-  s.email       = ["avi@kensodev.com"]
-  s.homepage    = "http://www.github.com/kensodev/perform_later"
+  s.name        = "kiqit"
+  s.version     = Kiqit::VERSION
+  s.authors     = ["Avi Tzurel", "Tom Caspy"]
+  s.email       = ["avi@kensodev.com", "tom@kensodev.com"]
+  s.homepage    = "http://www.github.com/kensodev/kiqit"
   s.summary     = %q{Queue any method in any class or instance with no need for additional Worker class and no extra code}
   s.description = %q{Queue any method in any class or instance with no need for additional Worker class and no extra code}
 
-  s.rubyforge_project = "perform_later"
+  s.rubyforge_project = "kiqit"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

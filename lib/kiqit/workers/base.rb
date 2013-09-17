@@ -1,4 +1,4 @@
-module PerformLater
+module Kiqit
   module Workers
 		class Base
 

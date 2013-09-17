@@ -1,2 +1,2 @@
 # init
-require 'perform_later'
+require 'kiqit'

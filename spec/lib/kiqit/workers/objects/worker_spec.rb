@@ -18,15 +18,15 @@ class DummyClass
   end
 end
 
-describe PerformLater::Workers::Objects::Worker do
-  subject { PerformLater::Workers::Objects::Worker.new }
+describe Kiqit::Workers::Objects::Worker do
+  subject { Kiqit::Workers::Objects::Worker.new }
 
   it "should pass an array of hashes into the method" do
     arr = [
       { foo: "bar" },
       { bar: "foo" }
     ]
-    arr = PerformLater::ArgsParser.args_to_sidekiq(arr)
+    arr = Kiqit::ArgsParser.args_to_sidekiq(arr)
     subject.perform("DummyClass", :do_somthing_with_array_of_hashes, arr).should == "bar"
   end
 
@@ -36,7 +36,7 @@ describe PerformLater::Workers::Objects::Worker do
 
   it "should pass a single argument (user)" do
     user = User.create
-    args = PerformLater::ArgsParser.args_to_sidekiq(user)
+    args = Kiqit::ArgsParser.args_to_sidekiq(user)
     subject.perform("DummyClass", :identity_function, args).should == user
   end
 
@@ -51,13 +51,13 @@ describe PerformLater::Workers::Objects::Worker do
 
   it "should pass an array with one entry" do
     users = [User.create]
-    args = PerformLater::ArgsParser.args_to_sidekiq(users)
+    args = Kiqit::ArgsParser.args_to_sidekiq(users)
     subject.perform("DummyClass", :identity_function, args).should == users
   end
 
   it "should pass multi dimension arrays" do
     data = [1, 2, User.create, ["a", "b", "c"]]
-    args = PerformLater::ArgsParser.args_to_sidekiq(data)
+    args = Kiqit::ArgsParser.args_to_sidekiq(data)
     subject.perform("DummyClass", :identity_function, args).should == data
   end
 
@@ -67,8 +67,8 @@ describe PerformLater::Workers::Objects::Worker do
         something_a: "aaa",
         something_b: "bbb"
       }
-    arg1 = PerformLater::ArgsParser.args_to_sidekiq(user)
-    arg2 = PerformLater::ArgsParser.args_to_sidekiq(arr)
+    arg1 = Kiqit::ArgsParser.args_to_sidekiq(user)
+    arg2 = Kiqit::ArgsParser.args_to_sidekiq(arr)
     subject.perform("DummyClass", :join, arg1, arg2).split("|")[1].should == "{:something_a=>\"aaa\", :something_b=>\"bbb\"}"
   end
 end

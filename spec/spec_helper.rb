@@ -1,6 +1,6 @@
 require "net/http"
 require "uri"
-require "perform_later"
+require "kiqit"
 require "rspec"
 require "support/database_connection"
 require "support/database_models"
@@ -29,7 +29,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
-    PerformLater::Plugins.clear_finder!
+    Kiqit::Plugins.clear_finder!
     $real_redis.flushdb
   end
 end

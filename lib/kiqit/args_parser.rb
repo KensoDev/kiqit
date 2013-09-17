@@ -1,6 +1,6 @@
 require 'json'
 
-module PerformLater
+module Kiqit
   class ArgsParser
     # inspired by DelayedJob
     CLASS_STRING_FORMAT = /^CLASS\:([A-Z][\w\:]+)$/
@@ -24,8 +24,8 @@ module PerformLater
               runner_class = $1.constantize
               id = $2
 
-              if PerformLater::Plugins.finder_class
-                PerformLater::Plugins.finder_class.find(runner_class, id)
+              if Kiqit::Plugins.finder_class
+                Kiqit::Plugins.finder_class.find(runner_class, id)
               else
                 runner_class.where(id: id).first  
               end

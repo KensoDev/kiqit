@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/KensoDev/perform_later.png)](https://secure.travis-ci.org/KensoDev/perform_later)
+[![Build Status](https://secure.travis-ci.org/KensoDev/kiqit.png)](https://secure.travis-ci.org/KensoDev/kiqit)
 
 ## Overview
 Perform later is a gem meant to work with the [Sidekiq](http://github.com/defunkt/sidekiq) queue system.
@@ -7,7 +7,7 @@ Usually, when working with Sidekiq, you need separate "Worker" classes and you a
 
 That can be a real hassle if you are adding Sidekiq to an existing project, it can also add quite a bit of code to your system.
 
-`perform_later` fills this need, it offers a suite to handle all of your queuing needs, both for Objects and for ActiveRecord models.
+`kiqit` fills this need, it offers a suite to handle all of your queuing needs, both for Objects and for ActiveRecord models.
 
 ## Why?
 *Why* should you queue something for later?
@@ -22,10 +22,10 @@ At [Gogobot](http://gogobot.com) whenever you post a review, there's major score
 The user should not wait for this on submit, it can be queued into later execution.
 
 ## Installation
-gem install perform_later
+gem install kiqit
 
 If you are using bundler, simply add
-`gem "perform_later"` to your Gemfile
+`gem "kiqit"` to your Gemfile
 
 
 ## Configuration
@@ -33,7 +33,7 @@ In an initializer, all you need to say is whether you want perform later to be e
 
 ```ruby
 unless Rails.env.test?
-  PerformLater.config.enabled = true # this will default to false if unset
+  Kiqit.config.enabled = true # this will default to false if unset
 end
 ```
 
@@ -41,7 +41,7 @@ end
 
 ### ActiveRecord
 
-`perform_later` comes with a special method you can use on ActiveRecord models.
+`kiqit` comes with a special method you can use on ActiveRecord models.
 
 
 ```ruby
@@ -87,7 +87,7 @@ You can of course choose to run the method off the queue, just prepend `now_` to
 
 ### Objects/Classes
 
-If you want class methods to be queued, you will have to use the `perform_later` special method.
+If you want class methods to be queued, you will have to use the `kiqit` special method.
 
 ```ruby
 	class SomeClass
@@ -100,32 +100,32 @@ If you want class methods to be queued, you will have to use the `perform_later`
 	  	end  	
 	end
 	
-	SomeClass.perform_later(:queue_name, :some_heavy_lifting_method)
-	SomeClass.perform_later(:queue_name, :some_more_heavy_lifting, user_id)
+	SomeClass.kiqit(:queue_name, :some_heavy_lifting_method)
+	SomeClass.kiqit(:queue_name, :some_more_heavy_lifting, user_id)
 	
 
 ```
 
-If you want the method to be a loner (only a single instance in the queue), you will need to use the `perform_later!` method.
+If you want the method to be a loner (only a single instance in the queue), you will need to use the `kiqit!` method.
 
 ```ruby
-	SomeClass.perform_later!(:queue_name, :some_more_heavy_lifting, user_id)
+	SomeClass.kiqit!(:queue_name, :some_more_heavy_lifting, user_id)
 ```
 
 ## The params parser
-`perform_later` has a special class called `ArgsParser`, this class is in charge of *translating* the args you are passing into params that can actually be serialized to JSON cleanly.
+`kiqit` has a special class called `ArgsParser`, this class is in charge of *translating* the args you are passing into params that can actually be serialized to JSON cleanly.
 
 Examples:
 
 ```ruby
 	user = User.find(1)
-	PerformLater::ArgsParser.params_to_sidekiq(user) => 'AR:#User:1'
+	Kiqit::ArgsParser.params_to_sidekiq(user) => 'AR:#User:1'
 	
 	hotel = Hotel.find(1)
-	PerformLater::ArgsParser.params_to_sidekiq(hotel) => 'AR:#Hotel:1'
+	Kiqit::ArgsParser.params_to_sidekiq(hotel) => 'AR:#Hotel:1'
 	
 	hash = { name: "something", other: "something else" }
-	PerformLater::ArgsParser.params_to_sidekiq(hash) 
+	Kiqit::ArgsParser.params_to_sidekiq(hash) 
 	=> ---
 		:name: something
 		:other: something else
@@ -159,13 +159,13 @@ So, I added support for custom finders.
 Then in an initializer
 
 ```ruby
-	PerformLater::Plugins.add_finder(CustomFinder)
+	Kiqit::Plugins.add_finder(CustomFinder)
 ```
 
 You can also remove the finder in runtime
 
 ```ruby
-	PerformLater::Plugins.clear_finder!
+	Kiqit::Plugins.clear_finder!
 ```
 
 So, at Gogobot for example, we will fall back to master if the record was not found on the slave DB.
@@ -188,5 +188,5 @@ Avi Tzurel ([@kensodev](http://twitter.com/kensodev)) http://www.kensodev.com
 * Felipe Lima ([@felipecsl](http://twitter.com/felipecsl)) 
 http://blog.felipel.com/
 
-Felipe did awesome work on making sure `perform_later` can work with any args and any number of args passed into the methods.
+Felipe did awesome work on making sure `kiqit` can work with any args and any number of args passed into the methods.
 Felipe now has commit rights to the repo.
