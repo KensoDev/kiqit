@@ -14,8 +14,15 @@ module PerformLater
     end
 
     def enqueue(delay=nil)
-      return Resque.enqueue_in_with_queue(queue, delay, worker, klass_name, id, method, args) if delay 
-      Resque::Job.create(queue, worker, klass_name, id, method, *args)
+      params = {}
+      if delay
+        delay = delay.is_a?(Hash) ? delay[:delay] : delay
+        params["at"] = (Time.now + delay).to_i
+      end
+
+      params.merge!({"queue" => queue, "class" => worker, "args" => [klass_name, id, method, *args]})
+
+      Sidekiq::Client.push(params)
     end
   end
 end

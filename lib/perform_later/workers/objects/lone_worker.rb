@@ -2,11 +2,11 @@ module PerformLater
   module Workers
     module Objects
       class LoneWorker < PerformLater::Workers::Base
-        def self.perform(klass_name, method, *args)
+        def perform(klass_name, method, *args)
           digest = PerformLater::PayloadHelper.get_digest(klass_name, method, args)
-          Resque.redis.del(digest)
+          Sidekiq.redis.del(digest)
 
-          arguments = PerformLater::ArgsParser.args_from_resque(args)
+          arguments = PerformLater::ArgsParser.args_from_sidekiq(args)
           
           perform_job(klass_name.constantize, method, arguments)
         end

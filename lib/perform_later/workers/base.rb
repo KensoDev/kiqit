@@ -1,9 +1,11 @@
 module PerformLater
   module Workers
 		class Base
+
+      include Sidekiq::Worker
       
   		protected
-  			def self.perform_job(object, method, arguments)
+  			def perform_job(object, method, arguments)
   				unless arguments.empty?
             if arguments.size == 1
               object.send(method, arguments.first)

@@ -1,4 +1,4 @@
-module Resque::Plugins::Later::Method
+module Sidekiq::Plugins::Later::Method
   extend ActiveSupport::Concern
 
   module ClassMethods
@@ -12,12 +12,12 @@ module Resque::Plugins::Later::Method
         delay          = opts.fetch(:delay, false)
         klass          = PerformLater::Workers::ActiveRecord::Worker
         klass          = PerformLater::Workers::ActiveRecord::LoneWorker if loner
-        args           = PerformLater::ArgsParser.args_to_resque(args)
+        args           = PerformLater::ArgsParser.args_to_sidekiq(args)
         digest         = PerformLater::PayloadHelper.get_digest(klass, method_name, args)
 
         if loner
-          return "AR EXISTS!" unless Resque.redis.get(digest).blank?
-          Resque.redis.set(digest, 'EXISTS')
+          return "AR EXISTS!" if Sidekiq.redis{|i| i.get(digest).present?}
+          Sidekiq.redis{|i| i.set(digest, 'EXISTS')}
         end
 
         job = PerformLater::JobCreator.new(queue, klass, send(:class).name, send(:id), "now_#{method_name}", *args)
@@ -32,7 +32,7 @@ module Resque::Plugins::Later::Method
 
     worker  = PerformLater::Workers::ActiveRecord::Worker
     job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
-    enqueue_in_resque_or_send(job)
+    enqueue_in_sidekiq_or_send(job)
   end
 
   def perform_later!(queue, method, *args)
@@ -41,7 +41,7 @@ module Resque::Plugins::Later::Method
     
     worker  = PerformLater::Workers::ActiveRecord::LoneWorker
     job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
-    enqueue_in_resque_or_send(job)
+    enqueue_in_sidekiq_or_send(job)
   end
 
   def perform_later_in(delay, queue, method, *args)
@@ -49,7 +49,7 @@ module Resque::Plugins::Later::Method
 
     worker  = PerformLater::Workers::ActiveRecord::Worker
     job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
-    enqueue_in_resque_or_send(job, delay)
+    enqueue_in_sidekiq_or_send(job, delay)
   end
   
   def perform_later_in!(delay, queue, method, *args)
@@ -57,24 +57,24 @@ module Resque::Plugins::Later::Method
 
     worker  = PerformLater::Workers::ActiveRecord::LoneWorker
     job     = PerformLater::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
-    enqueue_in_resque_or_send(job, delay)
+    enqueue_in_sidekiq_or_send(job, delay)
   end
 
 
 
   private 
     def loner_exists(method, args)
-      args = PerformLater::ArgsParser.args_to_resque(args)
+      args = PerformLater::ArgsParser.args_to_sidekiq(args)
       digest = PerformLater::PayloadHelper.get_digest(self.class.name, method, args)
 
-      return true unless Resque.redis.get(digest).blank?
-      Resque.redis.set(digest, 'EXISTS')
+      return true unless Sidekiq.redis{ |i| i.get(digest).blank?}
+      Sidekiq.redis{|i| i.set(digest, 'EXISTS')}
 
       return false
     end
 
-    def enqueue_in_resque_or_send(job, delay=nil)
-      job.args = PerformLater::ArgsParser.args_to_resque(job.args)
+    def enqueue_in_sidekiq_or_send(job, delay=nil)
+      job.args = PerformLater::ArgsParser.args_to_sidekiq(job.args)
       job.enqueue(delay)
     end
         

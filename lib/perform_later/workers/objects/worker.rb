@@ -2,8 +2,8 @@ module PerformLater
   module Workers
     module Objects
       class Worker < PerformLater::Workers::Base
-        def self.perform(klass_name, method, *args)
-          arguments = PerformLater::ArgsParser.args_from_resque(args)
+        def perform(klass_name, method, *args)
+          arguments = PerformLater::ArgsParser.args_from_sidekiq(args)
 
           perform_job(klass_name.constantize, method, arguments)
         end

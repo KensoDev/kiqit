@@ -1,11 +1,11 @@
 [![Build Status](https://secure.travis-ci.org/KensoDev/perform_later.png)](https://secure.travis-ci.org/KensoDev/perform_later)
 
 ## Overview
-Perform later is a gem meant to work with the [Resque](http://github.com/defunkt/resque) queue system.
+Perform later is a gem meant to work with the [Sidekiq](http://github.com/defunkt/sidekiq) queue system.
 
-Usually, when working with Resque, you need separate "Worker" classes and you also need to do `Resque.enqueue` whenever you want to add a task to the queue.
+Usually, when working with Sidekiq, you need separate "Worker" classes and you also need to do `Sidekiq.enqueue` whenever you want to add a task to the queue.
 
-That can be a real hassle if you are adding Resque to an existing project, it can also add quite a bit of code to your system.
+That can be a real hassle if you are adding Sidekiq to an existing project, it can also add quite a bit of code to your system.
 
 `perform_later` fills this need, it offers a suite to handle all of your queuing needs, both for Objects and for ActiveRecord models.
 
@@ -119,13 +119,13 @@ Examples:
 
 ```ruby
 	user = User.find(1)
-	PerformLater::ArgsParser.params_to_resque(user) => 'AR:#User:1'
+	PerformLater::ArgsParser.params_to_sidekiq(user) => 'AR:#User:1'
 	
 	hotel = Hotel.find(1)
-	PerformLater::ArgsParser.params_to_resque(hotel) => 'AR:#Hotel:1'
+	PerformLater::ArgsParser.params_to_sidekiq(hotel) => 'AR:#Hotel:1'
 	
 	hash = { name: "something", other: "something else" }
-	PerformLater::ArgsParser.params_to_resque(hash) 
+	PerformLater::ArgsParser.params_to_sidekiq(hash) 
 	=> ---
 		:name: something
 		:other: something else
@@ -134,7 +134,7 @@ Examples:
 
 Basically, the `ArgsParser` class allows you to keep passing any args you want to your methods without worrying about whether they serialize cleanly or not.
 
-`ArgsParser` also patched `resque-mailer` so you can pass in AR objects to mailers as well.
+`ArgsParser` also patched `sidekiq-mailer` so you can pass in AR objects to mailers as well.
 
 ## The custom finder
 I found the need to add a custom finder to the args parser.

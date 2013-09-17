@@ -7,16 +7,16 @@ module PerformLater
     AR_STRING_FORMAT    = /^AR\:([A-Z][\w\:]+)\:(\d+)$/
     YAML_STRING_FORMAT  = /\A---/
 
-    def self.args_to_resque(args)
+    def self.args_to_sidekiq(args)
       return nil unless args
-      return arg_to_resque(args) unless args.is_a?(Array)
-      return args.map { |o| arg_to_resque o }
+      return arg_to_sidekiq(args) unless args.is_a?(Array)
+      return args.map { |o| arg_to_sidekiq o }
     end
     
-    def self.args_from_resque(args)
+    def self.args_from_sidekiq(args)
       args = args.map { |o|
         if o
-          o = args_from_resque(o) if o.is_a?(Array)
+          o = args_from_sidekiq(o) if o.is_a?(Array)
           case o
             when CLASS_STRING_FORMAT
               $1.constantize
@@ -40,7 +40,7 @@ module PerformLater
 
   private
 
-    def self.arg_to_resque(arg)
+    def self.arg_to_sidekiq(arg)
       case arg
       when ActiveRecord::Base
         "AR:#{arg.class.name}:#{arg.id}"

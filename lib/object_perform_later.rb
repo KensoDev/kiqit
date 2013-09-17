@@ -19,14 +19,13 @@ module ObjectPerformLater
     def loner_exists(method, *args)
       digest = PerformLater::PayloadHelper.get_digest(self.name, method, args)
 
-      return true unless Resque.redis.get(digest).blank?
-      Resque.redis.set(digest, 'EXISTS')
-      return false
+      !Sidekiq.redis{|i| i.setnx(digest, 'EXISTS')}
     end
 
     def perform_later_enqueue(worker, queue, method, args)
-      args = PerformLater::ArgsParser.args_to_resque(args)
-      args.size == 1 ? Resque::Job.create(queue, worker, self.name, method, args.first) : Resque::Job.create(queue, worker, self.name, method, *args)
+      args = PerformLater::ArgsParser.args_to_sidekiq(args)
+      params = {"queue" => queue, "class" => worker, "args" => [self.name, method, *args]}
+      Sidekiq::Client.push(params)
     end
 
     def perform_now(method, args)

@@ -18,18 +18,13 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  # specify any dependencies here; for example:
-  s.add_dependency 'rails', '~> 3.0'
-  s.add_dependency 'resque'
-  s.add_dependency 'resque-scheduler'
-  s.add_dependency 'redis'
+  s.add_dependency 'sidekiq'
+  s.add_dependency 'activerecord'
 
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec-rails'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'sqlite3'
-  s.add_development_dependency 'spork-rails'
   s.add_development_dependency 'fakeredis'
-  s.add_development_dependency 'simplecov'
 end

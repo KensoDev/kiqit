@@ -7,14 +7,14 @@ describe PerformLater::JobCreator do
 
   describe :enqueue do
     context "with :delay option" do
-      it "should enqueue job in Resque with the given delay" do
-        Resque.should_receive(:enqueue_in_with_queue)
+      it "should enqueue job in Sidekiq with the given delay" do
+        Sidekiq::Client.should_receive(:push)
         job.enqueue delay: delay
       end
     end
     context "without :delay option" do
-      it "should create a regular resque job if delay option isn't given" do
-        Resque::Job.should_receive(:create)
+      it "should create a regular sidekiq job if delay option isn't given" do
+        Sidekiq::Client.should_receive(:push)
         job.enqueue
       end
     end

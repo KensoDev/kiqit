@@ -6,11 +6,6 @@ require "support/database_connection"
 require "support/database_models"
 require "redis"
 require 'fakeredis/rspec'
-require 'simplecov'
-require 'resque'
-require 'resque_scheduler'
-
-SimpleCov.start
 
 RSpec.configure do |config|
   config.mock_with :rspec
@@ -24,11 +19,17 @@ RSpec.configure do |config|
   end
 
   config.before(:suite) do
-    $redis = Redis.new
+    $redis = {}
+    $real_redis = Redis.new
+    Sidekiq.redis = $redis
+  end
+
+  config.before(:each) do
+    Sidekiq.redis{|i| i.flushdb}
   end
 
   config.after(:each) do
     PerformLater::Plugins.clear_finder!
-    $redis.flushdb
+    $real_redis.flushdb
   end
 end
