@@ -29,7 +29,7 @@ module ObjectKiqit
     end
 
     def perform_now(method, args)
-      args.size == 1 ? send(method, args.first) : send(method, *args)
+      send(method, *args)
     end
 end
 
