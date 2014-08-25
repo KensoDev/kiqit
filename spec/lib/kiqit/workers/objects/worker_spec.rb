@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-class DummyClass 
+class DummyClass
   def self.do_somthing_with_array_of_hashes(arr)
     arr[0][:foo]
   end
@@ -44,9 +44,9 @@ describe Kiqit::Workers::Objects::Worker do
     user = User.create
     user_arg = "AR:User:#{user.id}"
     mock_user = double(:user, first: nil)
-    User.should_receive(:where).with(id: user.id.to_s).and_return { mock_user }
-    
-    subject.perform("DummyClass", :identity_function, user_arg).should == nil
+    expect(User).to receive(:where).with(id: user.id.to_s) { mock_user }
+
+    expect(subject.perform("DummyClass", :identity_function, user_arg)).to eq(nil)
   end
 
   it "should pass an array with one entry" do

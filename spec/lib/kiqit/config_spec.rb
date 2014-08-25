@@ -4,8 +4,8 @@ describe Kiqit::Config do
   before(:each) { Kiqit.config.enabled = false }
 
   it "should set the perform later mode" do
-    Kiqit.config.enabled?.should be_false
+    expect(Kiqit.config.enabled?).to eq(false)
     Kiqit.config.enabled = true
-    Kiqit.config.enabled?.should == true
+    expect(Kiqit.config.enabled?).to eq(true)
   end
 end
