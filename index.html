@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Kiqit by KensoDev</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Kiqit</h1>
+          <h2>Your SideKiq helper</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/KensoDev/kiqit/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/KensoDev/kiqit/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/KensoDev/kiqit" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <p><a href="https://secure.travis-ci.org/KensoDev/kiqit"><img src="https://secure.travis-ci.org/KensoDev/kiqit.png" alt="Build Status"></a></p>
+
+<h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>Kiqit is a gem meant to work with the <a href="http://github.com/mperham/sidekiq">Sidekiq</a> queue system. It was adapted from the Perform Later gem.</p>
+
+<p>Usually, when working with Sidekiq, you need separate "Worker" classes and you also need to do <code>Sidekiq.enqueue</code> whenever you want to add a task to the queue.</p>
+
+<p>That can be a real hassle if you are adding Sidekiq to an existing project, it can also add quite a bit of code to your system.</p>
+
+<p><code>kiqit</code> fills this need, it offers a suite to handle all of your queuing needs, both for Objects and for ActiveRecord models.</p>
+
+<h2>
+<a id="why" class="anchor" href="#why" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why?</h2>
+
+<p><em>Why</em> should you queue something for later?</p>
+
+<p>You should queue something whenever the method handles some heavy lifting, some timely actions like API, 3rd party HTTP requests and more.</p>
+
+<p>The basic logic is that whatever you don't need to do NOW, you should do later, this will make your site faster and the users will feel it.</p>
+
+<h2>
+<a id="real-life-use-case" class="anchor" href="#real-life-use-case" aria-hidden="true"><span class="octicon octicon-link"></span></a>Real life use case</h2>
+
+<p>At <a href="http://gogobot.com">Gogobot</a> whenever you post a review, there's major score calculation going on. This can sometimes take up to a minute, depending on the user graph.</p>
+
+<p>The user should not wait for this on submit, it can be queued into later execution.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>gem install kiqit</p>
+
+<p>If you are using bundler, simply add
+<code>gem "kiqit"</code> to your Gemfile</p>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p>In an initializer, all you need to say is whether you want kiqit to be enabled or not, typically, it will be something like this</p>
+
+<div class="highlight highlight-ruby"><pre><span class="pl-k">unless</span> <span class="pl-s3">Rails</span>.env.test?
+  <span class="pl-s3">Kiqit</span>.config.enabled <span class="pl-k">=</span> <span class="pl-c1">true</span> <span class="pl-c"># this will default to false if unset</span>
+<span class="pl-k">end</span></pre></div>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a id="activerecord" class="anchor" href="#activerecord" aria-hidden="true"><span class="octicon octicon-link"></span></a>ActiveRecord</h3>
+
+<p><code>kiqit</code> comes with a special method you can use on ActiveRecord models.</p>
+
+<div class="highlight highlight-ruby"><pre>
+    <span class="pl-k">class</span> <span class="pl-en">User<span class="pl-e"> &lt; ActiveRecord::Base</span></span>
+      <span class="pl-k">def</span> <span class="pl-en">long_running_method</span>
+        <span class="pl-c"># Your code here</span>
+      <span class="pl-k">end</span>
+      later <span class="pl-c1">:long_running_method</span>
+
+      <span class="pl-k">def</span> <span class="pl-en">long_running_method_2</span>
+        <span class="pl-c"># Your code here</span>
+      <span class="pl-k">end</span>
+      later <span class="pl-c1">:long_running_method_2</span>, <span class="pl-c1">queue:</span> <span class="pl-c1">:some_queue_name</span>
+
+      <span class="pl-k">def</span> <span class="pl-en">lonely_long_running_method</span>
+        <span class="pl-c"># Your code here</span>
+      <span class="pl-k">end</span>
+      later <span class="pl-c1">:lonely_long_running_method</span>, <span class="pl-c1">:loner</span> =&gt; <span class="pl-c1">true</span>, <span class="pl-c1">queue:</span> <span class="pl-c1">:some_queue_name</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">delayed_long_running_method</span>
+      <span class="pl-c"># Your code here</span>
+    <span class="pl-k">end</span>
+    later <span class="pl-c1">:delayed_long_running_method</span>, <span class="pl-c1">:delay</span> =&gt; <span class="pl-c1">30</span>, <span class="pl-c1">queue:</span> <span class="pl-c1">:some_queue_name</span>
+    <span class="pl-k">end</span>
+</pre></div>
+
+<div class="highlight highlight-ruby"><pre>    u <span class="pl-k">=</span> <span class="pl-s3">User</span>.find(some_user_id)
+    u.long_running_method <span class="pl-c"># Method will be queued into the :generic queue</span>
+    u.long_running_method_2 <span class="pl-c"># Method will be queued into :some_queue_name queue</span>
+    u.lonely_long_running_method <span class="pl-c"># Method will be queued into the :some_queue_name queue, only a single instance of this method can exist in the queue.</span>
+  u.delayed_long_running_method <span class="pl-c"># Method will be queued into :some_queue_name queue only after 30 seconds have passed.</span></pre></div>
+
+<p>You can of course choose to run the method off the queue, just prepend <code>now_</code> to the method name and it will be executed in sync.</p>
+
+<div class="highlight highlight-ruby"><pre>    u <span class="pl-k">=</span> <span class="pl-s3">User</span>.find(some_user_id)
+    u.now_long_running_method</pre></div>
+
+<h3>
+<a id="objectsclasses" class="anchor" href="#objectsclasses" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objects/Classes</h3>
+
+<p>If you want class methods to be queued, you will have to use the <code>kiqit</code> special method.</p>
+
+<div class="highlight highlight-ruby"><pre>    <span class="pl-k">class</span> <span class="pl-en">SomeClass</span>
+        <span class="pl-k">def</span> <span class="pl-en">self.some_heavy_lifting_method</span>
+          <span class="pl-c"># Your code here</span>
+        <span class="pl-k">end</span>
+
+        <span class="pl-k">def</span> <span class="pl-en">self.some_more_heavy_lifting</span>(<span class="pl-vpf">user_id</span>)
+          <span class="pl-c"># Your code here</span>
+        <span class="pl-k">end</span>     
+    <span class="pl-k">end</span>
+
+    <span class="pl-s3">SomeClass</span>.kiqit(<span class="pl-c1">:queue_name</span>, <span class="pl-c1">:some_heavy_lifting_method</span>)
+    <span class="pl-s3">SomeClass</span>.kiqit(<span class="pl-c1">:queue_name</span>, <span class="pl-c1">:some_more_heavy_lifting</span>, user_id)
+
+</pre></div>
+
+<p>If you want the method to be a loner (only a single instance in the queue), you will need to use the <code>kiqit!</code> method.</p>
+
+<div class="highlight highlight-ruby"><pre>    <span class="pl-s3">SomeClass</span>.kiqit!(<span class="pl-c1">:queue_name</span>, <span class="pl-c1">:some_more_heavy_lifting</span>, user_id)</pre></div>
+
+<h2>
+<a id="the-params-parser" class="anchor" href="#the-params-parser" aria-hidden="true"><span class="octicon octicon-link"></span></a>The params parser</h2>
+
+<p><code>kiqit</code> has a special class called <code>ArgsParser</code>, this class is in charge of <em>translating</em> the args you are passing into params that can actually be serialized to JSON cleanly.</p>
+
+<p>Examples:</p>
+
+<div class="highlight highlight-ruby"><pre>    user <span class="pl-k">=</span> <span class="pl-s3">User</span>.find(<span class="pl-c1">1</span>)
+    <span class="pl-s3">Kiqit</span>::<span class="pl-s3">ArgsParser</span>.params_to_sidekiq(user) =&gt; <span class="pl-s1"><span class="pl-pds">'</span>AR:#User:1<span class="pl-pds">'</span></span>
+
+    hotel <span class="pl-k">=</span> <span class="pl-s3">Hotel</span>.find(<span class="pl-c1">1</span>)
+    <span class="pl-s3">Kiqit</span>::<span class="pl-s3">ArgsParser</span>.params_to_sidekiq(hotel) =&gt; <span class="pl-s1"><span class="pl-pds">'</span>AR:#Hotel:1<span class="pl-pds">'</span></span>
+
+    hash <span class="pl-k">=</span> { <span class="pl-c1">name:</span> <span class="pl-s1"><span class="pl-pds">"</span>something<span class="pl-pds">"</span></span>, <span class="pl-c1">other:</span> <span class="pl-s1"><span class="pl-pds">"</span>something else<span class="pl-pds">"</span></span> }
+    <span class="pl-s3">Kiqit</span>::<span class="pl-s3">ArgsParser</span>.params_to_sidekiq(hash) 
+    =&gt; <span class="pl-k">---</span>
+        <span class="pl-c1">:name</span>: something
+        <span class="pl-c1">:other</span>: something <span class="pl-k">else</span>
+    <span class="pl-c"># Hashes are translated into YAML</span></pre></div>
+
+<p>Basically, the <code>ArgsParser</code> class allows you to keep passing any args you want to your methods without worrying about whether they serialize cleanly or not.</p>
+
+<p><code>ArgsParser</code> also patched <code>sidekiq-mailer</code> so you can pass in AR objects to mailers as well.</p>
+
+<h2>
+<a id="the-custom-finder" class="anchor" href="#the-custom-finder" aria-hidden="true"><span class="octicon octicon-link"></span></a>The custom finder</h2>
+
+<p>I found the need to add a custom finder to the args parser.</p>
+
+<h3>
+<a id="why-1" class="anchor" href="#why-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why?</h3>
+
+<p>At Gogobot for example, we use slave databases, those sometimes have lag, so when the finder is executed it returns nil, even though the record is actually on the master.</p>
+
+<p>So, I added support for custom finders.</p>
+
+<h4>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example:</h4>
+
+<div class="highlight highlight-ruby"><pre>    <span class="pl-k">class</span> <span class="pl-en">CustomFinder</span>
+        <span class="pl-k">def</span> <span class="pl-en">self.find</span>(<span class="pl-vpf">klass</span>, <span class="pl-vpf">id</span>)
+            <span class="pl-s3">Octopus</span>.using(<span class="pl-c1">:master</span>) {
+                klass.where(<span class="pl-c1">id:</span> id).first
+            } <span class="pl-k">unless</span> klass.where(<span class="pl-c1">id:</span> id).first
+        <span class="pl-k">end</span>
+    <span class="pl-k">end</span></pre></div>
+
+<p>Then in an initializer</p>
+
+<div class="highlight highlight-ruby"><pre>    <span class="pl-s3">Kiqit</span>::<span class="pl-s3">Plugins</span>.add_finder(<span class="pl-vo">CustomFinder</span>)</pre></div>
+
+<p>You can also remove the finder in runtime</p>
+
+<div class="highlight highlight-ruby"><pre>    <span class="pl-s3">Kiqit</span>::<span class="pl-s3">Plugins</span>.clear_finder!</pre></div>
+
+<p>So, at Gogobot for example, we will fall back to master if the record was not found on the slave DB.</p>
+
+<h2>
+<a id="contribute--bug-reports" class="anchor" href="#contribute--bug-reports" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contribute / Bug reports</h2>
+
+<p>If you have an issue with this gem, please open an issue in the main repo, it will help tons if you could supply a failing spec with that, so I can better track where the bug is coming from, if not, no worries, just report I will do my best to address it as fast and efficient as I can.</p>
+
+<p>If you want to contribute (awesome), open a feature branch, base it on master.</p>
+
+<p>Be as descriptive as you can in the pull request description, just to be clear what problem you are solving or what feature are you adding.</p>
+
+<h2>
+<a id="authors" class="anchor" href="#authors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors</h2>
+
+<p>Avi Tzurel (<a href="http://twitter.com/kensodev">@kensodev</a>) <a href="http://www.kensodev.com">http://www.kensodev.com</a>
+Tom Caspy</p>
+
+<h2>
+<a id="contributors" class="anchor" href="#contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributors</h2>
+
+<ul>
+<li>Felipe Lima (<a href="http://twitter.com/felipecsl">@felipecsl</a>) 
+<a href="http://blog.felipel.com/">http://blog.felipel.com/</a>
+</li>
+</ul>
+
+<p>Felipe did awesome work on making sure <code>kiqit</code> can work with any args and any number of args passed into the methods.
+Felipe now has commit rights to the repo.</p>
+        </section>
+
+        <footer>
+          Kiqit is maintained by <a href="https://github.com/KensoDev">KensoDev</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
