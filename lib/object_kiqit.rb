@@ -5,6 +5,7 @@ module ObjectKiqit
     worker = Kiqit::Workers::Objects::Worker
     kiqit_enqueue(worker, queue, method, args)
   end
+  alias_method :perform_later, :kiqit
 
   def kiqit!(queue, method, *args)
     return perform_now(method, args) unless Kiqit.config.enabled?
@@ -14,6 +15,7 @@ module ObjectKiqit
     worker = Kiqit::Workers::Objects::LoneWorker
     kiqit_enqueue(worker, queue, method, args)
   end
+  alias_method :perform_later!, :kiqit!
 
   private 
     def loner_exists(method, *args)

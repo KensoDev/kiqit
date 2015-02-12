@@ -31,38 +31,40 @@ module Sidekiq::Plugins::Later::Method
     return perform_now(method, args) if plugin_disabled?
 
     worker  = Kiqit::Workers::ActiveRecord::Worker
-    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args)
     enqueue_in_sidekiq_or_send(job)
   end
+  alias_method :perform_later, :kiqit
 
   def kiqit!(queue, method, *args)
     return perform_now(method, args) if plugin_disabled?
     return "AR EXISTS!" if loner_exists(method, args)
-    
+
     worker  = Kiqit::Workers::ActiveRecord::LoneWorker
-    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args)
     enqueue_in_sidekiq_or_send(job)
   end
+  alias_method :perform_later!, :kiqit!
 
   def kiqit_in(delay, queue, method, *args)
     return perform_now(method, args) if plugin_disabled?
 
     worker  = Kiqit::Workers::ActiveRecord::Worker
-    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args)
     enqueue_in_sidekiq_or_send(job, delay)
   end
-  
+  alias_method :perform_in, :kiqit_in
+
   def kiqit_in!(delay, queue, method, *args)
     return  perform_now(method, args) if plugin_disabled?
 
     worker  = Kiqit::Workers::ActiveRecord::LoneWorker
-    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args) 
+    job     = Kiqit::JobCreator.new(queue, worker, self.class.name, self.id, method, *args)
     enqueue_in_sidekiq_or_send(job, delay)
   end
+  alias_method :perform_in!, :kiqit_in!
 
-
-
-  private 
+  private
     def loner_exists(method, args)
       args = Kiqit::ArgsParser.args_to_sidekiq(args)
       digest = Kiqit::PayloadHelper.get_digest(self.class.name, method, args)
@@ -77,7 +79,7 @@ module Sidekiq::Plugins::Later::Method
       job.args = Kiqit::ArgsParser.args_to_sidekiq(job.args)
       job.enqueue(delay)
     end
-        
+
     def plugin_disabled?
       !Kiqit.config.enabled?
     end
