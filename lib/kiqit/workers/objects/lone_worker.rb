@@ -4,7 +4,7 @@ module Kiqit
       class LoneWorker < Kiqit::Workers::Base
         def perform(klass_name, method, *args)
           digest = Kiqit::PayloadHelper.get_digest(klass_name, method, args)
-          Sidekiq.redis.del(digest)
+          Sidekiq.redis { |r| r.del(digest) }
 
           arguments = Kiqit::ArgsParser.args_from_sidekiq(args)
           
